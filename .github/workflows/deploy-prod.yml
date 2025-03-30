@@ -8,6 +8,8 @@ env:
 jobs:
   build:
     runs-on: "ubuntu-latest"
+    env:
+      SKIP_MIGRATION: true
     permissions:
       id-token: write
       contents: read

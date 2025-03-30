@@ -19,8 +19,11 @@ RUN go mod download
 # Copy the entire source code
 COPY . .
 
-# Build the Go application
+# Build the Go application (buffet-pos-backend)
 RUN go build -o buffet-pos-backend .
+
+# Build the migration tool (migrate.go)
+RUN go build -o migrate ./cmd/migrate.go
 
 # ───────────────────────────────────────────────────────────
 # 🚀 Stage 2: Create the final runtime image
@@ -33,11 +36,12 @@ RUN apk --no-cache add ca-certificates
 # Set up working directory
 WORKDIR /app
 
-# Copy the compiled binary from the builder stage
+# Copy the compiled binaries from the builder stage
 COPY --from=builder /app/buffet-pos-backend .
+COPY --from=builder /app/migrate .
 
-# Ensure the binary is executable
-RUN chmod +x buffet-pos-backend
+# Ensure the binaries are executable
+RUN chmod +x buffet-pos-backend migrate
 
 # Copy timezone info for accurate timestamps
 COPY --from=builder /usr/local/go/lib/time/zoneinfo.zip /zoneinfo.zip
@@ -47,7 +51,6 @@ ENV ZONEINFO=/zoneinfo.zip
 ENV PORT=8080
 
 # Expose the port (for documentation, Cloud Run ignores it)
-
 EXPOSE $PORT
 
 # Start the Go application
